@@ -30,7 +30,7 @@ from src.gsv import gsv
 from src.forest import soil
 
 from src.algae import measurement_spec_24_08_23 as algae
-from src.algae import measurement_spec_30_11_23 as M
+from src.algae import measurement_spec_11_04_24 as M
 from src.utils import data_utils as DU
 from src.leaf_model import training_data
 
@@ -220,7 +220,7 @@ def algae_leaf(set_name, sample_nr):
     refl = np.clip(refl,0,1)
     data = DU.pack_target(wls=wls,refls=refl,trans=tran)
     TH.write_target(set_name=set_name, data=data)
-    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=1,
+    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=False, resolution=10,
                                       clear_old_results=True, solver='nn')
 
 
@@ -425,11 +425,11 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    source_id = 'reactor_validation'
-    target_id = 'reactor_validation_2'
-    material_name = "Reactor content material"
-    sample_id = 2
-    algae_leaf_set_name = f"algae_sample_{sample_id}"
+    # source_id = 'reactor_validation'
+    # target_id = 'reactor_validation_2'
+    # material_name = "Reactor content material"
+    # sample_id = 2
+    # algae_leaf_set_name = f"algae_sample_{sample_id}"
     # forest.init(leaves=[(algae_leaf_set_name, 0, material_name)], custom_forest_id=target_id,copy_forest_id=source_id,
     #             conf_type='m2m', sun_file_name="AP67_spectra.txt")
     # BC.setup_forest(forest_id=target_id, leaf_name_list=[material_name],light_max_pow=100)
@@ -447,27 +447,35 @@ if __name__ == '__main__':
 
 
     ## Validation stuff
-    light_max_pow = 50
+
+
+    # Solve algae as a leaf
+    # validation_set_name = 'validation_sample_1'
+    # algae_leaf(set_name='validation_sample_1_lowres', sample_nr=1)
+    # algae_leaf(set_name='validation_sample_2', sample_nr=2)
+
+    light_max_pow = 2000
     material_name = "Reactor content material"
-    algae_leaf_set_name = f"validation_sample_1"
+    algae_leaf_set_name = f"validation_sample_1_lowres"
     algae_leaves = [(algae_leaf_set_name, 0, material_name)]
-    #
+
     # forest_id = forest.init(leaves=algae_leaves, rng=rng,
-    #                         custom_forest_id=f"validation_algae_1_v_0.8L",
-    #                         copy_forest_id='validation_algae_1_v_1.3L',
-    #                         sun_file_name="AP67_spectra_real.txt")
-    forest_id_iso = "validation_algae_1_v_1.3L"
+    #                         custom_forest_id=f"validation_growth_bottle_low_res_2",
+    #                         copy_forest_id='validation_growth_bottle_low_res',
+    #                         sun_file_name="AP67_spectra_real_2.txt")
+    # forest_id_iso = "validation_algae_1_v_1.3L"
     # forest_id_pieni = "validation_algae_1_v_0.8L"
-    BC.setup_forest(forest_id=forest_id_iso, leaf_name_list=[material_name], kettle_type="glass", light_max_pow=light_max_pow)
-    BC.render_forest(forest_id=forest_id_iso,render_mode='top', light_max_pow=light_max_pow)
-    CH.construct_envi_cube(forest_id=forest_id_iso, light_max_power=light_max_pow)
+    forest_id = 'validation_growth_bottle_low_res_2'
+    BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], kettle_type="glass", light_max_pow=light_max_pow)
+    BC.render_forest(forest_id=forest_id,render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=forest_id, light_max_power=light_max_pow)
 
     # asym_test()
     # plot_asym_test()
 
     # Plot algae measurement stuff
     # M.plot_references(dont_show=False)
-    # M.plot_algae(dont_show=False)
+    # M.plot_algae(dont_show=False, show_rough=False)
 
     ##### ALGAE STUFF #######
 
@@ -479,10 +487,6 @@ if __name__ == '__main__':
 
     # solve_all_algae_leaves()
 
-    # Solve algae as a leaf
-    # validation_set_name = 'validation_sample_1'
-    # algae_leaf(set_name='validation_sample_1', sample_nr=1)
-    # algae_leaf(set_name='validation_sample_2', sample_nr=2)
 
     # for i in range(5):
     # These 3 lines do everything at once
