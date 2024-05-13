@@ -1,14 +1,14 @@
 """
 Entry point of the program.
 
-There is no user interface to the program (yet) so code your calls here
-and run in your favourite IDE.
+Look for main at the end of the file to recreate algae experiments used in the paper.
 """
 
 import logging
 import os.path
 import datetime
 import math
+import time
 
 import os
 import numpy as np
@@ -18,78 +18,18 @@ import plotter
 import src.leaf_model.nn
 from src.leaf_model import surf as SM
 from src.forest import forest
-from src.blender_scripts import forest_control as control
 
 from src.data import toml_handling as TH, cube_handling as CH, file_names as FN, path_handling as PH
 from src.leaf_model import interface as LI
 from src import constants as C
-from src.reflectance_lab import diffuse_reflectance
 
 from src.rendering import blender_control as BC
-from src.gsv import gsv
-from src.forest import soil
 
 from src.algae import measurement_spec_24_08_23 as algae
+# from src.algae import measurement_spec_01_09_23 as M
 from src.algae import measurement_spec_11_04_24 as M
 from src.utils import data_utils as DU
 from src.leaf_model import training_data
-
-
-def write_forest_control(forest_id: str, control_dict: dict):
-    TH.write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
-
-
-def read_forest_control(forest_id: str) -> dict:
-    return TH.read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
-
-
-def forest_pipe_test(rng):
-
-    # Generating low resolution random leaves
-    set_name = 'low_res_w_dry'
-    new_sampling = [450,500,550,600,700,800]
-    # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=2)
-    # LI.generate_prospect_leaf(set_name=set_name, sample_id=4) # add one dry default leaf
-    # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
-    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
-    #
-    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves, conf_type='m2m', rng=rng, custom_forest_id='control_test')
-
-    """
-    Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    """
-
-    forest_id = 'control_test'
-
-    BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
-
-    BC.render_forest(forest_id=forest_id, render_mode='preview')
-    BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    BC.render_forest(forest_id=forest_id, render_mode='spectral')
-
-    CH.construct_envi_cube(forest_id=forest_id)
-    CH.show_simulated_cube(forest_id=forest_id)
-
-    # BC.generate_forest_control(global_master=True)
-
-
-
-def run_paper_tests():
-
-    nn_name = "lc5_lw1000_b32_lr0.000_split0.10.pt"
-    surf_model_name = FN.get_surface_model_save_name('train_iter_4_v4')
-
-    resolution = 5
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_specchio_nn", copyof="specchio", solver="nn",
-                                      solver_model_name=nn_name, plot_resampling=False, use_dumb_sampling=True)
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_specchio_surf", copyof="specchio", solver="surf",
-                                      plot_resampling=False, solver_model_name=surf_model_name, use_dumb_sampling=True)
-
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_prospect_nn", copyof="prospect_randoms", solver="nn",
-                                      solver_model_name=nn_name, plot_resampling=False, use_dumb_sampling=True)
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_prospect_surf", copyof="prospect_randoms",
-                                      solver="surf", plot_resampling=False, solver_model_name=surf_model_name, use_dumb_sampling=True)
 
 
 def asym_test():
@@ -181,32 +121,24 @@ def iterative_train():
 
     # Iterative train manually
     set_name_iter_1 = "train_iter_1v4_algae"
-    # LI.train_models(set_name=set_name_iter_1, generate_data=True, starting_guess_type='curve',
-    #                 train_points_per_dim=30, similarity_rt=0.25, train_surf=True, train_nn=False, data_generation_diff_step=0.01)
+    LI.train_models(set_name=set_name_iter_1, generate_data=True, starting_guess_type='curve',
+                    train_points_per_dim=30, similarity_rt=0.25, train_surf=True, train_nn=False, data_generation_diff_step=0.01)
     set_name_iter_2 = "train_iter_2_v4_algae"
-    # surf_model_name = FN.get_surface_model_save_name(set_name_iter_1)
-    # LI.train_models(set_name=set_name_iter_2, generate_data=True, starting_guess_type='surf',
-    #                 surface_model_name=surf_model_name, similarity_rt=0.5, train_surf=True, train_nn=False,
-    #                 train_points_per_dim=50, data_generation_diff_step=0.001)
+    surf_model_name = FN.get_surface_model_save_name(set_name_iter_1)
+    LI.train_models(set_name=set_name_iter_2, generate_data=True, starting_guess_type='surf',
+                    surface_model_name=surf_model_name, similarity_rt=0.5, train_surf=True, train_nn=False,
+                    train_points_per_dim=50, data_generation_diff_step=0.001)
     set_name_iter_3 = "train_iter_3_v4_algae"
-    # surf_model_name = FN.get_surface_model_save_name(set_name_iter_2)
-    # LI.train_models(set_name=set_name_iter_3, generate_data=True, starting_guess_type='surf',
-    #                 surface_model_name=surf_model_name, similarity_rt=0.75, train_surf=True, train_nn=False,
-    #                 train_points_per_dim=70, data_generation_diff_step=0.001)
+    surf_model_name = FN.get_surface_model_save_name(set_name_iter_2)
+    LI.train_models(set_name=set_name_iter_3, generate_data=True, starting_guess_type='surf',
+                    surface_model_name=surf_model_name, similarity_rt=0.75, train_surf=True, train_nn=False,
+                    train_points_per_dim=70, data_generation_diff_step=0.001)
     set_name_iter_4 = "train_iter_4_v4_algae"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_3)
     LI.train_models(set_name=set_name_iter_4, generate_data=True, starting_guess_type='surf',
                     surface_model_name=surf_model_name, similarity_rt=1.0, train_surf=False, train_nn=True,
                     train_points_per_dim=200, dry_run=False, data_generation_diff_step=0.001, show_plot=True, learning_rate=0.0005)
 
-    # surf_model_name = FN.get_surface_model_save_name(set_name_iter_4)
-
-
-def solve_all_algae_leaves():
-
-    for i in range(1,6):
-        name = f"algae_sample_{i}"
-        algae_leaf(set_name=name, sample_nr=i)
 
 
 def algae_leaf(set_name, sample_nr):
@@ -224,31 +156,7 @@ def algae_leaf(set_name, sample_nr):
                                       clear_old_results=True, solver='nn')
 
 
-def reactor_test(algae_leaf_set_name:str,  rng):
-
-    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True, resolution=5, use_dumb_sampling=True)
-
-    material_name = "Reactor content material"
-    algae_leaves = [(algae_leaf_set_name, 0, material_name)]
-    # forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=algae_scene_id, sun_file_name="lamp_spectra.txt")
-
-    """
-    Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    """
-
-    BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])
-
-    # BC.render_forest(forest_id=forest_id, render_mode='preview')
-    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
-    #
-    # CH.construct_envi_cube(forest_id=forest_id)
-    # CH.show_cube(forest_id=forest_id)
-
-    # BC.generate_forest_control(global_master=True)
-
-
-def make_kettles(light_max_pow=100, algae_sample_id=1):
+def make_kettles(light_max_pow=2000, algae_sample_id=1):
     """
 
     Ensin Wolfram alphaan ratkastavaksi r_s yhtälöstä: r_g^3 - r_s^3 + (r_g^4 / (n * r_s))
@@ -323,18 +231,24 @@ def make_kettles(light_max_pow=100, algae_sample_id=1):
         print(f"\tRod lamp volume [m^3]: {V_l}")
         print(f"\tRod lamp radius [m]: {r_l}")
 
-        # material_name = "Reactor content material"
-        algae_leaf_set_name = f"algae_sample_{algae_sample_id}"
+        material_name = "Reactor content material"
+        algae_leaf_set_name = f"algae_sample_{algae_sample_id}_lowres_smoothed"
         algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+        sun_file_name = 'AP67_spectra_real_2.txt'
         #
         # # Steel kettle
-        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_steel_{target_vol}_s{algae_sample_id}", sun_file_name="AP67_spectra.txt")
+        forest_id = forest.init(leaves=algae_leaves, rng=rng,
+                                custom_forest_id=f"reactor_steel_{target_vol}_s{algae_sample_id}",
+                                sun_file_name=sun_file_name)
         BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_s, kettle_type="steel", r_lamp=r_l,
                         n1=n1, n2=n2, n3=n3, n_rings=n_rings, top_cam_height=top_cam_height, light_max_pow=light_max_pow)
         #
         # # Glass kettle
-        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}_s{algae_sample_id}", sun_file_name="AP67_spectra.txt")
-        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass", top_cam_height=top_cam_height,
+        forest_id = forest.init(leaves=algae_leaves, rng=rng,
+                                custom_forest_id=f"reactor_glass_{target_vol}_s{algae_sample_id}",
+                                sun_file_name=sun_file_name)
+        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass",
+                        top_cam_height=top_cam_height,
                         light_max_pow=light_max_pow)
 
     # Equation for WA
@@ -370,29 +284,53 @@ def make_kettles(light_max_pow=100, algae_sample_id=1):
 
 def render_cubes(light_max_pow, algae_sample_id=1):
 
+    start = time.perf_counter()
     scene_id = f"reactor_steel_10_s{algae_sample_id}"
     BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+    dur = time.perf_counter() - start
+    dur_min = dur / 60
+    logging.info(f"Rendering cube took {dur_min:.2f} minutes. Scene '{scene_id}'.")
 
+    start = time.perf_counter()
     scene_id = f"reactor_steel_100_s{algae_sample_id}"
     BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+    dur = time.perf_counter() - start
+    dur_min = dur / 60
+    logging.info(f"Rendering cube took {dur_min:.2f} minutes. Scene '{scene_id}'.")
 
+    start = time.perf_counter()
     scene_id = f"reactor_steel_1000_s{algae_sample_id}"
     BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+    dur = time.perf_counter() - start
+    dur_min = dur / 60
+    logging.info(f"Rendering cube took {dur_min:.2f} minutes. Scene '{scene_id}'.")
 
+    start = time.perf_counter()
     scene_id = f"reactor_glass_10_s{algae_sample_id}"
     BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+    dur = time.perf_counter() - start
+    dur_min = dur / 60
+    logging.info(f"Rendering cube took {dur_min:.2f} minutes. Scene '{scene_id}'.")
 
+    start = time.perf_counter()
     scene_id = f"reactor_glass_100_s{algae_sample_id}"
     BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+    dur = time.perf_counter() - start
+    dur_min = dur / 60
+    logging.info(f"Rendering cube took {dur_min:.2f} minutes. Scene '{scene_id}'.")
 
+    start = time.perf_counter()
     scene_id = f"reactor_glass_1000_s{algae_sample_id}"
     BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+    dur = time.perf_counter() - start
+    dur_min = dur / 60
+    logging.info(f"Rendering cube took {dur_min:.2f} minutes. Scene '{scene_id}'.")
 
 
 def show_cubes(algae_sample_id=1):
@@ -425,95 +363,82 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    # source_id = 'reactor_validation'
-    # target_id = 'reactor_validation_2'
-    # material_name = "Reactor content material"
-    # sample_id = 2
-    # algae_leaf_set_name = f"algae_sample_{sample_id}"
-    # forest.init(leaves=[(algae_leaf_set_name, 0, material_name)], custom_forest_id=target_id,copy_forest_id=source_id,
-    #             conf_type='m2m', sun_file_name="AP67_spectra.txt")
-    # BC.setup_forest(forest_id=target_id, leaf_name_list=[material_name],light_max_pow=100)
-    # BC.render_forest(forest_id=target_id,render_mode='top',light_max_pow=100)
-    # CH.construct_envi_cube(forest_id=target_id,light_max_power=100)
-    # CH.show_simulated_cube(forest_id=target_id, use_SPy=False, rgb_bands=[57, 19, 9])
-    # CH.show_simulated_cube(forest_id='scene_reactor_validation_measured_white', use_SPy=False, override_path='D:\Koodi\Python\HyperBlend\HyperBlend\scenes\scene_reactor_validation_measured_white\cube/reflectance_cube_scene_reactor_validation_measured_white.hdr')
+    """
+    The following code runs the experiments and other results shown in the paper. The experiments should be 
+    recreatable at least with some tinkering. Retraining and some other less important parts may not work 
+    at all anymore. At least not without deep understanding of the current HyperBlend version and some detective 
+    work in git history. The code is in sorry state but there's no time to make it neat. I'll hopefully fix this 
+    in future iterations of HyperBlend and make it easier to construct experiments without the need to make drastic 
+    modifications to the source code. 
+    
+    -- Kimmo
+    """
 
-    rng = np.random.default_rng(4321)
 
-    # Retrain for algae
+    #### Retrain NN for algae ####
+
+    # Might work. Running this takes a long time.
     # iterative_train()
 
+    # Visualization of the training outcome. This was used in the paper though perhaps parameters may differ.
     # LI.visualize_leaf_models(training_set_name=set_name_iter_1, show_plot=True, plot_surf=False, plot_nn=False)
 
 
-    ## Validation stuff
+    #### Asymmetric test shown in the paper ####
+
+    # Probably doesnt work without some tinkering and fetching the old NN model from git history
+    # asym_test()
+    # plot_asym_test()
 
 
-    # Solve algae as a leaf
-    # validation_set_name = 'validation_sample_1'
-    # algae_leaf(set_name='validation_sample_1_lowres', sample_nr=1)
-    # algae_leaf(set_name='validation_sample_2', sample_nr=2)
+    #### Plot algae measurements ####
 
-    light_max_pow = 2000
+    # Plot spectrophotometer measurements of algae cultures. Note that the import of M
+    #   dictates which measurement is plotted. All of the data is included in git repo.
+
+    M.plot_references(dont_show=False)
+    M.plot_algae(dont_show=False, show_rough=False)
+
+
+    #### Validation stuff ####
+
     material_name = "Reactor content material"
-    algae_leaf_set_name = f"validation_sample_1_lowres"
-    algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+    algae_leaf_set_name = f"validation_sample_1_lowres_2" # give a name
+    algae_leaf(set_name=algae_leaf_set_name, sample_nr=1) # solve the slab model
+    algae_leaves = [(algae_leaf_set_name, 0, material_name)] # collect stuff to be sent to big sim
 
-    # forest_id = forest.init(leaves=algae_leaves, rng=rng,
-    #                         custom_forest_id=f"validation_growth_bottle_low_res_2",
-    #                         copy_forest_id='validation_growth_bottle_low_res',
-    #                         sun_file_name="AP67_spectra_real_2.txt")
-    # forest_id_iso = "validation_algae_1_v_1.3L"
-    # forest_id_pieni = "validation_algae_1_v_0.8L"
-    forest_id = 'validation_growth_bottle_low_res_2'
+    # Not in use for algae scenes, but required by the method.
+    rng = np.random.default_rng(4321)
+    # initialize the big sim scene. Called forest because history.
+    forest_id = forest.init(leaves=algae_leaves, rng=rng,
+                            custom_forest_id=f"validation_growth_bottle_low_res_3",
+                            copy_forest_id='validation_growth_bottle_low_res_2',
+                            sun_file_name="AP67_spectra_real_2.txt")
+
+    light_max_pow = 2000 # light pow for validation experiment
+    # forest_id = 'validation_growth_bottle_low_res_3' # use this if not run at one run with previous lines
     BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], kettle_type="glass", light_max_pow=light_max_pow)
     BC.render_forest(forest_id=forest_id,render_mode='top', light_max_pow=light_max_pow)
     CH.construct_envi_cube(forest_id=forest_id, light_max_power=light_max_pow)
 
-    # asym_test()
-    # plot_asym_test()
+    #### Design experiment ####
 
-    # Plot algae measurement stuff
-    # M.plot_references(dont_show=False)
-    # M.plot_algae(dont_show=False, show_rough=False)
+    light_max_pow = 50 # light power for design experiment
 
-    ##### ALGAE STUFF #######
+    # Call algae_leaf() for the ones you want to run the slab simulation on.
 
-    # algae_leaf_set_name = "algae_sample_1"
-    # algae_scene_id = "reactor_steel_10"
-    # material_name = "Reactor content material"
-    # light_max_pow = 100 # W / m^2
+    # Construct bioreactor (kettle) scenes of all types. The import M dictates which measured
+    #   algae spectra is used and thus which algae_sample_ids can be used. In this example,
+    #   1,2,3,4, and 5 are available. In the paper, 1 and 4 were used.
+    make_kettles(light_max_pow=light_max_pow, algae_sample_id=1)
+    # Render all cubes. Takes some time, so go get a coffee and a good movie.
+    render_cubes(light_max_pow=light_max_pow, algae_sample_id=1)
 
+    # The same for sample 4
+    make_kettles(light_max_pow=light_max_pow, algae_sample_id=4)
+    render_cubes(light_max_pow=light_max_pow, algae_sample_id=4)
 
-    # solve_all_algae_leaves()
-
-
-    # for i in range(5):
-    # These 3 lines do everything at once
-    # make_kettles(algae_sample_id=i+1)
-    # render_cubes(light_max_pow=light_max_pow, algae_sample_id=i+1)
-
-    # for i in range(5):
-    #     show_cubes(algae_sample_id=i+1)
-
-    # show_cubes(algae_sample_id=5)
-    # plt.pause(3000)
-
-    # BC.render_forest(forest_id="reactor_glass_100",render_mode='top', light_max_pow=light_max_pow)
-    # CH.construct_envi_cube(forest_id="reactor_glass_100", light_max_power=light_max_pow)
-    # CH.show_cube(forest_id="reactor_glass_100")
-
-
-    # CH.construct_envi_cube(forest_id=algae_scene_id, light_max_power=100)
-    # CH.show_cube(forest_id=algae_scene_id)
-
-    # material_name = "Reactor content material"
-
-
-    # reactor_test(algae_leaf_set_name=algae_leaf_set_name, rng=rng)
-
-
-    # BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])
-
-
-    #########################
+    # Should work and show the cubes. However, I recommend inspecting the cubes using
+    #   the CubeInspector software available at https://github.com/silmae/cubeinspector
+    # show_cubes(algae_sample_id=1)
+    # show_cubes(algae_sample_id=4)
