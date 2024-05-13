@@ -42,10 +42,10 @@ scene = bpy.context.scene
 collection_cameras = data.collections[FC.key_collection_cameras].all_objects
 collection_kettle = data.collections['Kettle'].all_objects
 collection_camera_ctrl = data.collections['Camera control'].all_objects
-collection_reactor = data.collections['Reactor'].all_objects
-collection_chassis = data.collections['Chassis'].all_objects
-collection_shafts = data.collections['Reactor shafts'].all_objects
-collection_studio = data.collections['Studio'].all_objects
+# collection_reactor = data.collections['Reactor'].all_objects
+# collection_chassis = data.collections['Chassis'].all_objects
+# collection_shafts = data.collections['Reactor shafts'].all_objects
+# collection_studio = data.collections['Studio'].all_objects
 
 
 def set_materials_use_spectral(use_spectral: bool):
@@ -220,17 +220,17 @@ def set_visibility(mode: str):
     for obj in collection_camera_ctrl[:]:
         hide(obj)
     # collection_reactor.hide_render = True
-    for obj in collection_reactor[:]:
-        hide(obj)
-    # collection_chassis.hide_render = True
-    for obj in collection_chassis[:]:
-        hide(obj)
-    # collection_shafts.hide_render = True
-    for obj in collection_shafts[:]:
-        hide(obj)
-    # collection_studio.hide_render = True
-    for obj in collection_studio[:]:
-        hide(obj)
+    # for obj in collection_reactor[:]:
+    #     hide(obj)
+    # # collection_chassis.hide_render = True
+    # for obj in collection_chassis[:]:
+    #     hide(obj)
+    # # collection_shafts.hide_render = True
+    # for obj in collection_shafts[:]:
+    #     hide(obj)
+    # # collection_studio.hide_render = True
+    # for obj in collection_studio[:]:
+    #     hide(obj)
 
     unhide(collection_kettle.get('Kettle'))
 
@@ -358,7 +358,7 @@ def call_blender_render(write_still=True, animation=False):
 
 
 def render_top_hsi():
-    res = 400
+    res = 512
     set_render_parameters(render_mode='top', camera='Top camera', res_x=res, res_y=res, res_percent=100)
     set_visibility(mode='top')
     scene.render.filepath = PH.join(PH.path_directory_forest_rend_spectral(SCENE_ID), "band_####.tiff")

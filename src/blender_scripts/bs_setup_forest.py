@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
 
     # Set up the kettle geometry
-    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_20"] = 1.0 # water level %
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_20"] = 1.0 # water level %
     if r_kettle is not None:
         bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_4"] = r_kettle * 2 # kettle diameter
         bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_5"] = r_kettle * 2 # kettle height
@@ -308,18 +308,20 @@ if __name__ == '__main__':
     if n_lamp_3 is not None:
         bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_29"] = n_lamp_3 # n lamps in outermost ring
 
-    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_6"] = 0.0  # raise lid
-    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_7"] = False  # cutout
-    #
-    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_14"] = 1.0 # lamp reach %
-    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_26"] = False # Hide lid
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_6"] = 0.0  # raise lid
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_7"] = False  # cutout
 
-    # if kettle_type == 'steel':
-    #     bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = True
-    # elif kettle_type == 'glass':
-    #     bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = False
-    # else:
-    #     raise AttributeError(f"Kettle type '{kettle_type}' not recognised")
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_14"] = 1.0 # lamp reach %
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_26"] = True # Hide lid
+
+    if kettle_type == 'steel':
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = True
+    elif kettle_type == 'glass':
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = False
+    else:
+        raise AttributeError(f"Kettle type '{kettle_type}' not recognised")
+
+    bpy.data.scenes["Scene"].cycles.samples = 5000
 
     bpy.data.objects["Top camera"].location[0] = 0.0
     bpy.data.objects["Top camera"].location[1] = 0.0
