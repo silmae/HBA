@@ -220,17 +220,17 @@ def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
     val_a5t = np.clip(val_a5t / final_ref_t, 0., 1.)
     val_a5r = np.clip(val_a5r / final_ref_r, 0., 1.)
 
-    # span2 = 3
-    # val_a1t = utils.smooth_data_np_convolve(arr=val_a1t, span=span2)
-    # val_a1r = utils.smooth_data_np_convolve(arr=val_a1r, span=span2)
-    # val_a2t = utils.smooth_data_np_convolve(arr=val_a2t, span=span2)
-    # val_a2r = utils.smooth_data_np_convolve(arr=val_a2r, span=span2)
-    # val_a3t = utils.smooth_data_np_convolve(arr=val_a3t, span=span2)
-    # val_a3r = utils.smooth_data_np_convolve(arr=val_a3r, span=span2)
-    # val_a4t = utils.smooth_data_np_convolve(arr=val_a4t, span=span2)
-    # val_a4r = utils.smooth_data_np_convolve(arr=val_a4r, span=span2)
-    # val_a5t = utils.smooth_data_np_convolve(arr=val_a5t, span=span2)
-    # val_a5r = utils.smooth_data_np_convolve(arr=val_a5r, span=span2)
+    sigma = 5
+    val_a1t = utils.smooth_data_np_convolve(arr=val_a1t, span=sigma)
+    val_a1r = utils.smooth_data_np_convolve(arr=val_a1r, span=sigma)
+    val_a2t = utils.smooth_data_np_convolve(arr=val_a2t, span=sigma)
+    val_a2r = utils.smooth_data_np_convolve(arr=val_a2r, span=sigma)
+    val_a3t = utils.smooth_data_np_convolve(arr=val_a3t, span=sigma)
+    val_a3r = utils.smooth_data_np_convolve(arr=val_a3r, span=sigma)
+    val_a4t = utils.smooth_data_np_convolve(arr=val_a4t, span=sigma)
+    val_a4r = utils.smooth_data_np_convolve(arr=val_a4r, span=sigma)
+    val_a5t = utils.smooth_data_np_convolve(arr=val_a5t, span=sigma)
+    val_a5r = utils.smooth_data_np_convolve(arr=val_a5r, span=sigma)
 
     ax[0].plot(wls, val_a1t, label='Sample 1', color=colors[0])
     ax[0].plot(wls, val_a2t, label='Sample 2', color=colors[1])
