@@ -11,6 +11,7 @@ import logging
 
 import spectres
 # SpectRes is used for resampling spectra to lower resolution
+from scipy.interpolate import CubicSpline
 
 from src import plotter
 from src.data import file_handling as FH, toml_handling as T
@@ -146,7 +147,19 @@ def resample(original_wl, original_val, new_wl):
     spec_wavs = np.array(original_wl)
     spec_fluxes = np.array(original_val)
 
-    resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes, fill=0.0)
+    # Disabled spectres resampling because it behaves badly at the ends of data
+    # resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes, fill=0.0)
+
+    # Instead, use Scipy cubic interpolation
+    if len(spec_fluxes.shape) > 1: # ref and tran given together
+        cs_ref = CubicSpline(spec_wavs, spec_fluxes[0]) # reflectance
+        cs_tran = CubicSpline(spec_wavs, spec_fluxes[1]) # transmittance
+        resampled = np.zeros((2, len(new_wavs)))
+        resampled[0] = cs_ref(new_wavs)
+        resampled[1] = cs_tran(new_wavs)
+    else: # some general 1D spectra to interpolate
+        cs = CubicSpline(spec_wavs, spec_fluxes)
+        resampled = cs(new_wavs)
     return resampled
 
 
