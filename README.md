@@ -21,12 +21,6 @@ future if the need arises.
   1. [Installing](#Installing)
   1. [Working principle](#Working_principle)
   1. [Usage](#Usage)
-     1. [PROSPECT leaves](#p_leaves)  
-     1. [Real_leaves](#Real_leaves)
-     1. [Re-training solvers](#Re-training)
-     1. [Forest canopies](#Forest)
-  1. [Project structure](#Project_structure)
-
 
 ##  <a name="How_to_cite"></a> How to cite
 
