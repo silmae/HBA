@@ -28,6 +28,8 @@ sky_data/*
 log*/* 
 leaf_model/*
 !leaf_model/nn_default.pt
+# Include old NN so that asym test can be run and the NNs compared
+!leaf_model/nn_default_old.pt 
 !leaf_model/model_parameters.toml
 
 # Ignore generated examples, but keep the sourse 
