@@ -7,14 +7,14 @@ import shutil
 import math
 import copy
 
-from src.leaf_model.opt import Optimization
+# from src.leaf_model.opt import Optimization
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH, path_handling as PH, toml_handling as TH
 import src.constants as C
 from src.forest import lighting
-from src.forest import soil
+# from src.forest import soil
 from src import plotter
-from src.blender_scripts import forest_control
+# from src.blender_scripts import forest_control
 from src.blender_scripts import forest_constants as FC
 
 
