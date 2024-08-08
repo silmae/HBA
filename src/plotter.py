@@ -555,23 +555,23 @@ def plot_asym_test_result(set_results, dont_show=True, save_thumbnail=True) -> N
 
         axis_object.set_xlabel(x_label, fontsize=axis_label_font_size)
 
-        if set_y_label:
-            axis_object.set_ylabel('Reflectance', color=refl_color, fontsize=axis_label_font_size)
-        axis_object.tick_params(axis='y', labelcolor=refl_color)
+        # if set_y_label:
+        #     axis_object.set_ylabel('jottai',  fontsize=axis_label_font_size)
+        # axis_object.tick_params(axis='y', labelcolor='black')
 
         # Make twin axis for transmittance
-        axt = axis_object.twinx()
+        # axt = axis_object.twinx()
 
-        if set_y_label:
-            axt.set_ylabel('Transmittance', color=tran_color, fontsize=axis_label_font_size)
-        axt.tick_params(axis='y', labelcolor=tran_color)
+        # if set_y_label:
+        #     axt.set_ylabel('Transmittance', color=tran_color, fontsize=axis_label_font_size)
+        # axt.tick_params(axis='y', labelcolor=tran_color)
 
         # But use given x_values for plotting
         marker = ''
         axis_object.plot(x_values, refl, label=f"Reflectance {plot_label}", color=refl_color, marker=marker, ls=ls)
-        axt.plot(x_values, tran, label=f"Transmittance {plot_label}", color=tran_color, marker=marker, ls=ls)
+        axis_object.plot(x_values, tran, label=f"Transmittance {plot_label}", color=tran_color, marker=marker, ls=ls)
 
-        axt.set_ylim([1, 0])
+        # axt.set_ylim([1, 0])
 
     plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
@@ -579,9 +579,13 @@ def plot_asym_test_result(set_results, dont_show=True, save_thumbnail=True) -> N
     ax[0].set_title('Varying T')
     ax[1].set_title('Varying R')
 
-    color_new = 'red'
-    color_old = 'blue'
-    color_target = 'gray'
+    # color_new = 'red'
+    # color_old = 'blue'
+    # color_target = 'gray'
+
+    ls_new = 'dashed'
+    ls_old = 'dotted'
+    ls_target = 'solid'
 
     for i in range(2):
 
@@ -593,12 +597,6 @@ def plot_asym_test_result(set_results, dont_show=True, save_thumbnail=True) -> N
             result_old = set_results[3]
 
         wls = result_new[C.key_set_result_wls]
-        rm_mean = np.array(result_new[C.key_set_result_wl_rm_mean])
-        tm_mean = np.array(result_new[C.key_set_result_wl_tm_mean])
-
-        plot_twin(ax[i],refl=rm_mean,tran=tm_mean,x_values=wls,x_label='',
-                                refl_color=color_target,tran_color=color_target,
-                                ls='dashed', plot_label="Target")
 
         r_mean_new = np.array(result_new[C.key_set_result_wl_r_mean])
         t_mean_new = np.array(result_new[C.key_set_result_wl_t_mean])
@@ -606,18 +604,35 @@ def plot_asym_test_result(set_results, dont_show=True, save_thumbnail=True) -> N
         t_mean_old = np.array(result_old[C.key_set_result_wl_t_mean])
 
         plot_twin(ax[i], refl=r_mean_new, tran=t_mean_new, x_values=wls, x_label='',
-                                #refl_color=color_new,tran_color=color_new,
+                                refl_color=color_reflectance,tran_color=color_transmittance, ls=ls_new,
                                 plot_label="New")
         plot_twin(ax[i],refl=r_mean_old,tran=t_mean_old,x_values=wls,x_label='',
-                                #refl_color=color_old,tran_color=color_old,
-                                plot_label="Old",ls='dotted', set_y_label=True)
+                                refl_color=color_reflectance,tran_color=color_transmittance,
+                                plot_label="Old",ls=ls_old, set_y_label=True)
 
+        rm_mean = np.array(result_new[C.key_set_result_wl_rm_mean])
+        tm_mean = np.array(result_new[C.key_set_result_wl_tm_mean])
+
+        plot_twin(ax[i],refl=rm_mean,tran=tm_mean,x_values=wls,x_label='',
+                                refl_color=color_reflectance,tran_color=color_transmittance,
+                                ls=ls_target, plot_label="Target")
+
+        ax[i].set_ylabel('Fraction', fontsize=axis_label_font_size)
+        ax[i].set_xlabel(r'$\left| R - T \right|$', fontsize=axis_label_font_size)
         ax[i].set_ylim([0,1])
-        ax[i].set_xticks([],[])
+
+        x_tics = range(len(wls))
+        x_labels = list(np.fabs(rm_mean - tm_mean))
+        x_labels = [f"{label:.1}" for label in x_labels]
+        x_labels[0] = "0.0"
+        ax[i].set_xticks(x_tics[::2],x_labels[::2])
 
         # print(f"R measured: {rm_mean}")
         # print(f"T measured: {tm_mean}")
 
+        handles, labels = ax[i].get_legend_handles_labels()
+        order = [4, 0, 2, 5, 1, 3]
+        ax[i].legend([handles[idx] for idx in order], [labels[idx] for idx in order])
         # ax[i].legend()
 
         # ax[i].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
