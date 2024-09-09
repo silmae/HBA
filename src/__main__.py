@@ -25,9 +25,9 @@ from src import constants as C
 
 from src.rendering import blender_control as BC
 
-from src.algae import measurement_spec_24_08_23 as algae
-# from src.algae import measurement_spec_01_09_23 as M
-from src.algae import measurement_spec_11_04_24 as M
+# from src.algae import measurement_spec_24_08_23 as algae
+from src.algae import measurement_spec_01_09_23 as M
+# from src.algae import measurement_spec_11_04_24 as M
 from src.utils import data_utils as DU
 from src.leaf_model import training_data
 
@@ -45,31 +45,31 @@ def asym_test():
     for i in range(4):
 
         if i == 0:
-            smthng = 'const_r_var_t'
-            set_name = f"{smthng}_new"
+            run_name = 'const_r_var_t'
+            set_name = f"{run_name}_new"
             nn_name = "nn_default"
             old = False
         if i == 1:
-            smthng = 'const_t_var_r'
-            set_name = f"{smthng}_new"
+            run_name = 'const_t_var_r'
+            set_name = f"{run_name}_new"
             nn_name = "nn_default"
             old = False
         if i == 2:
-            smthng = 'const_r_var_t'
-            set_name = f"{smthng}_old"
+            run_name = 'const_r_var_t'
+            set_name = f"{run_name}_old"
             nn_name = "nn_default_old"
             old = True
         if i == 3:
-            smthng = 'const_t_var_r'
-            set_name = f"{smthng}_old"
+            run_name = 'const_t_var_r'
+            set_name = f"{run_name}_old"
             nn_name = "nn_default_old"
             old = True
 
-        if smthng == 'const_r_var_t':
+        if run_name == 'const_r_var_t':
             r_list = np.ones((n,)) * const
             t_list = np.linspace(const, 1-const, num=n, endpoint=True)
             wls = np.arange(n)
-        elif smthng == 'const_t_var_r':
+        elif run_name == 'const_t_var_r':
             t_list = np.ones((n,)) * const
             r_list = np.linspace(const, 1-const, num=n, endpoint=True)
             wls = np.arange(n)
@@ -343,6 +343,38 @@ def show_cubes(algae_sample_id=1):
     CH.show_simulated_cube(forest_id=f"reactor_glass_1000_s{algae_sample_id}")
 
 
+def calc_intensities(dont_show=True, low_cut=1000, use_high_cut=False):
+    """Calculate the pixels of a reactor whose pixel value exceed given low_cut value.
+
+    NOTE requires existing mask images rendered with blender (or hand crafted).
+
+    :param dont_show:
+        If False, shows plots interactively to the user.
+    :param low_cut:
+        Low cut value
+    :param use_high_cut:
+        Exclude pixels that are burnt out for 16-bit unit.
+    """
+
+    for volume in [10, 100, 1000]:
+        row_glass = f"Glass {volume} L\t& "
+        row_steel = f"Steel {volume} L\t& "
+        for algae_sample_id in [4,1]:
+            b_glass, r_glass = CH.calc_BR_intensity(forest_id=f"reactor_glass_{volume}_s{algae_sample_id}",
+                                                    dont_show=dont_show, low_cut=low_cut, use_high_cut=use_high_cut)
+            b_steel, r_steel = CH.calc_BR_intensity(forest_id=f"reactor_steel_{volume}_s{algae_sample_id}",
+                                                    dont_show=dont_show, low_cut=low_cut, use_high_cut=use_high_cut)
+            row_glass += f" {b_glass:.1f} & {r_glass:.1f} &"
+            row_steel += f" {b_steel:.1f} & {r_steel:.1f} &"
+
+        row_glass = row_glass.rstrip('&')
+        row_steel = row_steel.rstrip('&')
+        row_glass += " \\\\"
+        row_steel += " \\\\"
+        print(row_glass)
+        print(row_steel)
+
+
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
@@ -442,3 +474,7 @@ if __name__ == '__main__':
     #   the CubeInspector software available at https://github.com/silmae/cubeinspector
     # show_cubes(algae_sample_id=1)
     # show_cubes(algae_sample_id=4)
+
+    # Calculate the pixels of a reactor whose pixel value exceed given low_cut value.
+    # NOTE requires existing mask images rendered with blender (or hand crafted).
+    calc_intensities(dont_show=True, low_cut=1000, use_high_cut=False)
