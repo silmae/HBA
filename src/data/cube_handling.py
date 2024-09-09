@@ -211,7 +211,20 @@ def show_simulated_cube(forest_id: str, use_SPy=False, rgb_bands=None, override_
 
 
 def calc_BR_intensity(forest_id: str, dont_show=True, low_cut=1000, use_high_cut=False):
-    import matplotlib.pyplot as plt
+    """Calculate the pixels of a reactor whose pixel value exceed given low_cut value.
+
+    NOTE requires existing mask images rendered with blender (or hand crafted).
+
+    :param forest_id:
+        Name of the scene
+    :param dont_show:
+        If False, shows plots interactively to the user.
+    :param low_cut:
+        Low cut value
+    :param use_high_cut:
+        Exclude pixels that are burnt out for 16-bit unit.
+    """
+
     p_cube = PH.path_file_forest_reflectance_header(forest_id=forest_id)
     p_mask = PH.path_file_visibility_map(forest_id=forest_id, file_name='mask.tif')
     data = spectral.open_image(p_cube)
@@ -222,20 +235,12 @@ def calc_BR_intensity(forest_id: str, dont_show=True, low_cut=1000, use_high_cut
     b_masked = br[:,:,0] * mask
     r_masked = br[:,:,1] * mask
 
-    # Test plot for middle pixel spectrum
+    # Debug plot for middle pixel spectrum
     # test_spec = data.read_pixel(row=int(data.nrows/2), col=int(data.ncols/2))
     # plt.plot(test_spec)
     # plt.show()
 
-    # r_max = r_masked.max()
-    # b_masked = b_masked / r_max
-    # r_masked = r_masked / r_max
-
-    count_all = b_masked.shape[0] * b_masked.shape[1]
     count_non_zero = np.count_nonzero(mask) # "region of interest"
-
-    # count_gt_b = np.count_nonzero(low_cut < b_masked)
-    # count_gt_r = np.count_nonzero(low_cut < r_masked)
 
     if use_high_cut:
         high_cut = 65535
@@ -245,14 +250,12 @@ def calc_BR_intensity(forest_id: str, dont_show=True, low_cut=1000, use_high_cut
         count_gt_b = np.count_nonzero(low_cut < b_masked)
         count_gt_r = np.count_nonzero(low_cut < r_masked)
 
-    # sum_blue = np.sum(b_masked)
-    # sum_red = np.sum(r_masked)
-    # mean_blue = sum_blue / count_non_zero
-    # mean_red = sum_red / count_non_zero
-    percent_roi = (count_non_zero/count_all)*100
     percent_b = (count_gt_b/count_non_zero)*100
     percent_r = (count_gt_r/count_non_zero)*100
 
+    ### Debugging printout ###
+    # percent_roi = (count_non_zero/count_all)*100
+    # count_all = b_masked.shape[0] * b_masked.shape[1]
     # print(f"Scene: {forest_id}")
     # print(f"\tPixel count: {count_all}, of which non-zero {count_non_zero} ({percent_roi:.1f} %)")
     # print(f"\tBlue pixel count above low limit ({low_cut}) {count_gt_b} ({percent_b:.2f} %)")
@@ -261,9 +264,7 @@ def calc_BR_intensity(forest_id: str, dont_show=True, low_cut=1000, use_high_cut
     zeroed = np.zeros_like(br[:,:,0])
     showable = np.stack((br[:,:,1], zeroed, br[:,:,0]))
     showable_masked = showable * mask
-    # showable = np.swapaxes(showable,2,0)
     showable_masked = np.swapaxes(showable_masked,2,0)
-    # showable = showable / np.max(showable)
     showable_masked = showable_masked / np.max(showable_masked)
 
     if not dont_show:
@@ -273,6 +274,7 @@ def calc_BR_intensity(forest_id: str, dont_show=True, low_cut=1000, use_high_cut
         plt.show()
 
     return percent_b, percent_r
+
 
 def inspect_cube(forest_id: str):
     p_cube = PH.path_file_forest_reflectance_header(forest_id=forest_id)
