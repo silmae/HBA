@@ -167,30 +167,8 @@ def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
 
     wls = utils.range(wls=wls, low=low, high=high, val=wls)
 
-    # Attempt to normilize transmittance to empty cuvette
-    # Works ok for transmittance
-    val_dit_mean = np.mean(val_dit)
-    # val_et_mean = np.mean(val_et)
-    # diff_we_t = val_dit / val_et
-    # mean_we_t = np.mean(diff_we_t)
-    # final_ref_t = val_et * mean_we_t
-
     # Normalize to lamp white
     final_ref_t = val_light_before
-
-    # Normalize to Di water
-    # final_ref_t = val_dit
-
-    # Attempt to normilize reflectance to empty cuvette
-    # Does not really work as we would be dividing with a small number
-    #   that explodes the final reflectance value, resulting in negative
-    #   absorption
-    # val_dir_mean = np.mean(val_dir)
-    # val_er_mean = np.mean(val_er)
-    # diff_we_r = val_dir / val_er
-    # mean_we_r = np.mean(diff_we_r)
-    # final_ref_r = val_er * mean_we_r
-
     # Normalize to lamp white
     final_ref_r = val_light_before
 
@@ -238,29 +216,11 @@ def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
     ax[0].plot(wls, val_a4t, label='Sample 4', color=colors[3])
     ax[0].plot(wls, val_a5t, label='Sample 5', color=colors[4])
 
-    # val_a1r = utils.smooth_data_np_convolve(arr=val_a1r,span=3)
-    # val_a2r = utils.smooth_data_np_convolve(arr=val_a2r,span=3)
-    # val_a3r = utils.smooth_data_np_convolve(arr=val_a3r,span=3)
-    # val_a4r = utils.smooth_data_np_convolve(arr=val_a4r,span=3)
-    # val_a5r = utils.smooth_data_np_convolve(arr=val_a5r,span=3)
-
     ax[1].plot(wls, val_a1r, label='Sample 1', color=colors[0])
     ax[1].plot(wls, val_a2r, label='Sample 2', color=colors[1])
     ax[1].plot(wls, val_a3r, label='Sample 3', color=colors[2])
     ax[1].plot(wls, val_a4r, label='Sample 4', color=colors[3])
     ax[1].plot(wls, val_a5r, label='Sample 5', color=colors[4])
-
-    # utils._plot_refl_tran_to_axis(ax, refl=val_a1r, tran=val_a1t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 1', color=colors[0])
-    # utils._plot_refl_tran_to_axis(ax, refl=val_a2r, tran=val_a2t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 2', color=colors[1])
-    # utils._plot_refl_tran_to_axis(ax, refl=val_a3r, tran=val_a3t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 3', color=colors[2])
-    # utils._plot_refl_tran_to_axis(ax, refl=val_a4r, tran=val_a4t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 4', color=colors[3])
-    # utils._plot_refl_tran_to_axis(ax, refl=val_a5r, tran=val_a5t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 5', color=colors[4])
-
-    # ax[0].plot(wls_wt, percentage_t, label=f"Difference (mean {percentage_t_mean:.2f})")
-
-    # ax[1].plot(wls_er, val_er, label=sample_numbers_01_09_2023['4791'])
-    # ax[1].plot(wls_wr, val_wr, label=sample_numbers_01_09_2023['4791'])
-    # ax[1].plot(wls_wr, percentage_r, label=f"Difference (mean {percentage_r_mean:.2f})")
 
     x_label = 'Wavelength [nm]'
     ax[0].set_xlabel(x_label, fontsize=plotter.axis_label_font_size)
@@ -268,7 +228,7 @@ def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
 
     ylim = [0,1.0]
     ax[0].set_ylim(ylim)
-    ax[1].set_ylim([0,1.0])
+    ax[1].set_ylim([0,0.1])
 
     ax[0].legend()
     ax[1].legend()
